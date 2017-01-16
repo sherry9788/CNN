@@ -7,7 +7,7 @@
 class output_layer : public layer
 {
 public:
-    output_layer() = delete;
+    output_layer() = default;
     output_layer(int n_window_size);
 
     void forward_propagade();
@@ -17,7 +17,7 @@ public:
 
 private:
 
-    int m_window_size;
+    int m_window_size = 0;
 };
 
 void output_layer::forward_propagade()

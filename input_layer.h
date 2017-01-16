@@ -25,7 +25,7 @@ private:
 void input_layer::input_data(const std::vector<double> &n_input)
 {
     // the number of input elements is wrong
-    assert(get_node_size() == (int)n_input.size());
+    assert(get_acceptance() == (int)n_input.size());
 
     for(int i = 0, Count = n_input.size(); i < Count; ++i)
     {
@@ -44,13 +44,15 @@ void input_layer::forward_propagade()
 void input_layer::backward_propagade()
 {
     // do nothing
+    throw call_error("call bp in input_layer!", "input_layer");
 }
 
 input_layer::input_layer(int n_acceptance):
     layer(layer_type::not_able_to_backpropagade),
     m_acceptance(n_acceptance)
     {
-        m_node.resize(n_acceptance);
+        for(int i = 0; i < n_acceptance; ++i)
+            m_node.push_back(ptr_node_t(new node()));
     }
 
 int input_layer::get_acceptance() const

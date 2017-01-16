@@ -23,6 +23,7 @@ private:
 void pooling_layer::backward_propagade()
 {
     // nothing
+    throw call_error("call bp in polling layer", "polling_layer");
 }
 
 void pooling_layer::forward_propagade()

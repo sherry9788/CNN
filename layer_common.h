@@ -13,24 +13,30 @@ public:
 
     layer() = delete;
     template <typename ITER>
+
     layer(ITER iter_beg, ITER iter_end, layer_type n_layer_type);
 
     layer(layer_type n_layer_type);
 
-    std::vector<node_ptr_t> &get_nodes();
-    std::vector<edge_ptr_t> &get_edges();
+    vec_node_t &get_nodes();
+    vec_edge_t &get_edges();
+
+    shape3d_t &get_size();
+    shape3d_t get_size() const;
 
 protected:
 
-    std::vector<node_ptr_t> m_node;
-    std::vector<edge_ptr_t> m_edge;
+    vec_node_t m_node;
+    vec_edge_t m_edge;
     layer_type m_layer_type;
+
+    shape3d_t m_size;
 
 };
 
 template <typename ITER>
-void init_edge(ITER iter_beg, ITER iter_end,
-               std::vector<edge_ptr_t> &m_edge,
+void init_edge(ITER, ITER,
+               vec_edge_t &,
                std::output_iterator_tag)
 {
     // do nothing
@@ -38,7 +44,7 @@ void init_edge(ITER iter_beg, ITER iter_end,
 
 template <typename ITER, typename ITER_TYPE>
 void init_edge(ITER iter_beg, ITER iter_end,
-               std::vector<edge_ptr_t> &m_edge,
+               vec_edge_t &m_edge,
                ITER_TYPE)
 {
     while(iter_beg != iter_end)
@@ -63,12 +69,12 @@ int layer::get_node_size() const
     return m_node.size();
 }
 
-std::vector<node_ptr_t> &layer::get_nodes()
+vec_node_t &layer::get_nodes()
 {
     return m_node;
 }
 
-std::vector<edge_ptr_t> &layer::get_edges()
+vec_edge_t &layer::get_edges()
 {
     return m_edge;
 }
@@ -82,11 +88,23 @@ layer::layer(layer_type n_layer_type):
 void layer::backward_propagade()
 {
     // do nothing
+    throw call_error("this layer doesn't support bp!", "layer");
 }
 
 void layer::forward_propagade()
 {
     // do nothing
+    throw call_error("this layer doesn't support bp!", "layer");
+}
+
+shape3d_t &layer::get_size()
+{
+    return m_size;
+}
+
+shape3d_t layer::get_size() const
+{
+    return m_size;
 }
 
 #endif // LAYER_COMMON_H_INCLUDED

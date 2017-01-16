@@ -17,11 +17,34 @@ public:
         return m_data[position.first][position.second];
     }
 
+    tensor_t details() const;
+
+    kernel();
+
+    kernel(tensor_t n_data);
+
 private:
 
-    std::vector<std::vector<double> > m_data;
+    tensor_t m_data;
     shape2d_t m_area;
 
 };
+
+kernel::kernel()
+{
+    // do nothing
+}
+
+kernel::kernel(tensor_t n_data):
+    m_data(n_data)
+{
+    get<0>(m_area) = m_data.size();
+    get<1>(m_area) = m_data[0].size();
+}
+
+tensor_t kernel::details() const
+{
+    return m_data;
+}
 
 #endif // KERNEL_H_INCLUDED
