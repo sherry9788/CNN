@@ -1,10 +1,5 @@
-#ifndef BASE_H_INCLUDED
-#define BASE_H_INCLUDED
-
-#include "alias.h"
-#include "util.h"
-#include "layer_exception.h"
-#include "math_error.h"
+#ifndef STDLIB_H_INCLUDED
+#define STDLIB_H_INCLUDED
 
 #include <iostream>
 #include <fstream>
@@ -29,12 +24,4 @@
 
 #include <cassert>
 
-#include <exception>
-
-#include <cmath>
-
-#include <random>
-
-#include <ctime>
-
-#endif // BASE_H_INCLUDED
+#endif // STDLIB_H_INCLUDED

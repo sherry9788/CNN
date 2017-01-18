@@ -7,8 +7,8 @@ class layer
 {
 public:
 
-    virtual void forward_propagade();
-    virtual void backward_propagade();
+    virtual void forward_propagate();
+    virtual void backward_propagate();
     int get_node_size() const;
 
     layer() = delete;
@@ -24,6 +24,11 @@ public:
     shape3d_t &get_size();
     shape3d_t get_size() const;
 
+    void resize_window();
+
+    layer *m_next_layer = nullptr;
+    layer *m_prev_layer = nullptr;
+
 protected:
 
     vec_node_t m_node;
@@ -31,7 +36,6 @@ protected:
     layer_type m_layer_type;
 
     shape3d_t m_size;
-
 };
 
 template <typename ITER>
@@ -85,16 +89,16 @@ layer::layer(layer_type n_layer_type):
         // do nothing
     }
 
-void layer::backward_propagade()
+void layer::backward_propagate()
 {
     // do nothing
     throw call_error("this layer doesn't support bp!", "layer");
 }
 
-void layer::forward_propagade()
+void layer::forward_propagate()
 {
     // do nothing
-    throw call_error("this layer doesn't support bp!", "layer");
+    throw call_error("this layer doesn't support fp!", "layer");
 }
 
 shape3d_t &layer::get_size()
@@ -105,6 +109,13 @@ shape3d_t &layer::get_size()
 shape3d_t layer::get_size() const
 {
     return m_size;
+}
+
+void layer::resize_window()
+{
+    int window_size = get<0>(m_size) * get<1>(m_size) * get<2>(m_size);
+    get<0>(m_size) = get<1>(m_size) = 1;
+    get<2>(m_size) = window_size;
 }
 
 #endif // LAYER_COMMON_H_INCLUDED

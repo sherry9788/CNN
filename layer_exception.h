@@ -53,4 +53,15 @@ public:
 
 };
 
+class edge_error : public std::logic_error
+{
+public:
+
+    edge_error(string info):
+        std::logic_error(info)
+    {
+        // do nothing
+    }
+};
+
 #endif // LAYER_EXCEPTION
