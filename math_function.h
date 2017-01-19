@@ -22,6 +22,11 @@ int sqrt(int N)
     return N;
 }
 
+int max(int arg1, int arg2)
+{
+    return arg1 > arg2 ? arg1 : arg2;
+}
+
 }
 
 #endif // MATH_FUNCTION

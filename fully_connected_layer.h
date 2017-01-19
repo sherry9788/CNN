@@ -14,13 +14,13 @@ public:
     void forward_propagate();
     void backward_propagate();
 
-    static double study_rate;
+    static double m_study_rate;
 
 private:
 
 };
 
-double fully_connected_layer::study_rate = 0.1;
+double fully_connected_layer::m_study_rate = 0.1;
 
 void fully_connected_layer::forward_propagate()
 {
@@ -57,11 +57,11 @@ void fully_connected_layer::backward_propagate()
             *m_edge[edge_index]->get_weights()[node_index] -=
                     m_node[node_index]->get_activation() *
                     next_layer_delta *
-                    study_rate;
+                    m_study_rate;
         }
 
         *m_edge[edge_index]->get_weights()[node_size] -=
-            BIAS * next_layer_delta * study_rate;
+            BIAS * next_layer_delta * m_study_rate;
     }
 }
 

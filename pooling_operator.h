@@ -8,11 +8,11 @@ namespace pooling{
 struct op
 {
     op();
-    virtual double operator()(vector<double> input);
+    virtual double operator()(vector<double> input, int &position);
     ~op();
 };
 
-double op::operator ()(vector<double>)
+double op::operator ()(vector<double>, int&)
 {
     throw call_error("trying to call the base version of pooling_op", "pooling_op");
 }
@@ -37,7 +37,7 @@ struct get_max : public op
         throw call_error("base version of get_max!", "get_max");
     }
 
-    double operator() (vector<double> input)
+    double operator() (vector<double>, int&)
     {
         // do nothing
         return 0;
@@ -48,13 +48,16 @@ struct get_max : public op
 template <>
 struct get_max<4> : public op
 {
-    double operator()(vector<double> input)
+    double operator()(vector<double> input, int &position)
     {
         double curr_max = -1e10;
         for(int i = 0; i < 4; ++i)
         {
             if(input[i] > curr_max)
+            {
+                position = i;
                 curr_max = input[i];
+            }
         } // for index i
         return curr_max;
     }
@@ -63,13 +66,16 @@ struct get_max<4> : public op
 template <>
 struct get_max<9> : public op
 {
-    double operator()(vector<double> input)
+    double operator()(vector<double> input, int &position)
     {
         double curr_max = -1e10;
         for(int i = 0; i < 9; ++i)
         {
             if(input[i] > curr_max)
+            {
+                position = i;
                 curr_max = input[i];
+            }
         } // for index i
         return curr_max;
     }
@@ -84,7 +90,7 @@ struct average : public op
         throw call_error("base version of average!", "average");
     }
 
-    double operator()(vector<double> input)
+    double operator()(vector<double> input, int&)
     {
         // do nothing
         return 0;
@@ -94,7 +100,7 @@ struct average : public op
 template <>
 struct average<4> : public op
 {
-    double operator()(vector<double> input)
+    double operator()(vector<double> input, int&)
     {
         double curr_sum(0);
         for(int i = 0; i < 4; ++i)
@@ -109,7 +115,7 @@ struct average<4> : public op
 template <>
 struct average<9> : public op
 {
-    double operator()(vector<double> input)
+    double operator()(vector<double> input, int&)
     {
         double curr_sum(0);
         for(int i = 0; i < 9; ++i)

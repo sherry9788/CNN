@@ -81,9 +81,7 @@ void connect(conv_layer &prev_layer, layer &next_layer)
 
     // Expand the picture with zero pixel that we can use the kelnel to scan it
 
-    ptr_node_t zero_node(new node(nonlinear_function_type::ReLU));
-
-    vector<vector<vector<ptr_node_t> > > node_map;
+    vector<vector<vector<ptr_node_t> > > &node_map = prev_layer.get_this_node_map();
 
     int depth = get<0>(prev_layer.get_size());
     int height = get<1>(prev_layer.get_size());
@@ -92,32 +90,7 @@ void connect(conv_layer &prev_layer, layer &next_layer)
     int height_addition = get<1>(prev_layer.get_kernel_size()) / 2;
     int width_addition = get<2>(prev_layer.get_kernel_size()) / 2;
 
-    node_map.resize(depth);
-
-    for(int depth_index = 0; depth_index < depth; ++ depth_index)
-    {
-        node_map[depth_index].resize(height + 2 * height_addition);
-        for(int height_index = 0; height_index < height + 2 * height_addition; ++ height_index)
-        {
-            node_map[depth_index][height_index].resize(width + 2 * width_addition);
-            for(int width_index = 0; width_index < width + 2 * width_addition; ++ width_index)
-            {
-                node_map[depth_index][height_index][width_index] = zero_node;
-            } // for width_index
-        } // for height_index
-    } // for depth_index
-
-    for(int depth_index = 0; depth_index < depth; ++ depth_index)
-    {
-        for(int height_index = 0; height_index < height; ++ height_index)
-        {
-            for(int width_index = 0; width_index < width; ++ width_index)
-            {
-                node_map[depth_index][height_index + height_addition][width_index + width_addition] =
-                        prev_layer.get_nodes()[depth_index * width * height + height_index * width + width_index];
-            }
-        }
-    }
+    node_map = expand_map(prev_layer.get_nodes(), depth, height, width, height_addition, width_addition);
 
     int num_kernel = get<0>(prev_layer.get_kernel_size());
 
@@ -125,9 +98,9 @@ void connect(conv_layer &prev_layer, layer &next_layer)
     {
     //////////////////////// if the connecting type is one to all
 
-    for(int depth_index = 0; depth_index < depth; ++ depth_index)
+    for(int kernel_index = 0; kernel_index < num_kernel; ++ kernel_index)
     {
-        for(int kernel_index = 0; kernel_index < num_kernel; ++ kernel_index)
+        for(int depth_index = 0; depth_index < depth; ++ depth_index)
         {
             vec_double_t weights = prev_layer.get_kernel()[kernel_index].align();
 
@@ -149,11 +122,9 @@ void connect(conv_layer &prev_layer, layer &next_layer)
                     prev_layer.get_edges().push_back(connecting_edge);
                     next_layer.get_nodes().push_back(next_node);
                 } // for width_index
-
             } // for height_index
-        } // for kernel_index
-
-    } // for depth_index
+        } // for depth_index
+    } // for kernel_index
 
     next_layer.get_size() = prev_layer.get_size();
     get<0>(next_layer.get_size()) *= get<0>(prev_layer.get_kernel_size());
@@ -199,6 +170,14 @@ void connect(conv_layer &prev_layer, layer &next_layer)
 
     next_layer.get_size() = prev_layer.get_size();
     }
+
+    prev_layer.get_next_node_map() =
+            expand_map(next_layer.get_nodes(),
+                       get<0>(next_layer.get_size()),
+                       get<1>(next_layer.get_size()),
+                       get<2>(next_layer.get_size()),
+                       height_addition,
+                       width_addition);
 
     next_layer.m_prev_layer = &prev_layer;
     prev_layer.m_next_layer = &next_layer;

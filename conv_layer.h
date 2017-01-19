@@ -25,6 +25,14 @@ public:
     connecting_type get_connecting_type() const;
     connecting_type &get_connecting_type();
 
+    vector<vector<vector<ptr_node_t> > > &get_this_node_map();
+    vector<vector<vector<ptr_node_t> > > get_this_node_map() const;
+
+    vector<vector<vector<ptr_node_t> > > &get_next_node_map();
+    vector<vector<vector<ptr_node_t> > > get_next_node_map() const;
+
+    static double m_study_rate;
+
 private:
 
     // Kernel is the scan window and will be used in the initiation
@@ -32,8 +40,14 @@ private:
     vector<kernel> m_kernel;
     shape3d_t m_kernel_size;
 
+    vector<vector<vector<ptr_node_t> > > m_this_node_map;
+    vector<vector<vector<ptr_node_t> > > m_next_node_map;
+
     connecting_type m_connecting_type = connecting_type::one_to_all;
+
 };
+
+double conv_layer::m_study_rate = 0.1;
 
 void conv_layer::add_kernel(kernel n_kernel)
 {
@@ -57,8 +71,141 @@ void conv_layer::forward_propagate()
 
 void conv_layer::backward_propagate()
 {
-    // do nothing
-    throw call_error("call bp in conv_layer", "conv_layer");
+    int depth = get<0>(m_size);
+    int height = get<1>(m_size);
+    int width = get<2>(m_size);
+
+    int kernel_size = get<0>(m_kernel_size);
+    int kernel_height = get<1>(m_kernel_size);
+    int kernel_width = get<2>(m_kernel_size);
+
+    int center_x = kernel_height / 2;
+    int center_y = kernel_width / 2;
+
+    if(m_connecting_type == connecting_type::one_by_one)
+    {
+    ///////////////////////// if the connecting type is one by one
+
+    for(int depth_index = 0; depth_index < depth; ++ depth_index)
+    {
+        tensor_t curr_kernel = m_kernel[depth_index].details();
+        for(int height_index = 0; height_index < height; ++ height_index)
+        {
+            for(int width_index = 0; width_index < width; ++ width_index)
+            {
+                double partial_E_y = 0;
+                for(int kernel_x = 0; kernel_x < kernel_height; ++ kernel_x)
+                {
+                    for(int kernel_y = 0; kernel_y < kernel_width; ++ kernel_y)
+                    {
+                        partial_E_y +=
+                                *curr_kernel[kernel_x][kernel_y] *
+                                m_next_node_map[depth_index]
+                                [center_x - kernel_x + kernel_height/2 + height_index]
+                                [center_y - kernel_y + kernel_width/2 + width_index]
+                                ->get_delta();
+                    } // for kernel_x
+                } // for_kernel_y
+
+                ptr_node_t curr_node = m_this_node_map[depth_index][height_index + kernel_height/2][width_index + kernel_width/2];
+                curr_node->get_delta() = curr_node->get_op().derivative(curr_node->get_input()) * partial_E_y;
+            } // for width_index
+        } // for height_index
+    } // for_depth_index
+
+    m_prev_layer->backward_propagate();
+
+    for(int depth_index = 0; depth_index < depth; ++ depth_index)
+    {
+        tensor_t curr_kernel = m_kernel[depth_index].details();
+        for(int kernel_x = 0; kernel_x < kernel_height; ++ kernel_x)
+        {
+            for(int kernel_y = 0; kernel_y < kernel_width; ++ kernel_y)
+            {
+                double weight_change = 0;
+                for(int height_index = 0; height_index < height; ++ height_index)
+                {
+                    for(int width_index = 0; width_index < width; ++ width_index)
+                    {
+                        weight_change += m_next_node_map[depth_index][height_index][width_index]->get_delta() *
+                                m_this_node_map[depth_index][height_index + kernel_x][width_index + kernel_x]->get_activation();
+                    } // for width_index
+                } // for height_index
+                //*curr_kernel[kernel_x][kernel_y] -= m_study_rate * weight_change;
+            } // for kernel_y
+        } // for kernel_x
+    } // for depth_index
+
+    }
+    else
+    {
+    /////////////////////////////////////// if the connecting type is one to all
+
+    for(int depth_index = 0; depth_index < depth; ++ depth_index)
+    {
+        for(int height_index = 0; height_index < height; ++ height_index)
+        {
+            for(int width_index = 0; width_index < width; ++ width_index)
+            {
+                double partial_E_y = 0;
+                for(int kernel_index = 0; kernel_index < kernel_size; ++ kernel_index)
+                {
+                    tensor_t curr_kernel = m_kernel[kernel_index].details();
+                    for(int kernel_x = 0; kernel_x < kernel_height; ++ kernel_x)
+                    {
+                        for(int kernel_y = 0; kernel_y < kernel_width; ++ kernel_y)
+                        {
+                            partial_E_y +=
+                                    *curr_kernel[kernel_x][kernel_y] *
+                                    m_next_node_map[kernel_index * depth + depth_index]
+                                    [center_x - kernel_x + kernel_height/2 + height_index]
+                                    [center_y - kernel_y + kernel_width/2 + width_index]
+                                    ->get_delta();
+                        } // for kernel_x
+                    } // for kernel_y
+                } // for kernel_index
+
+                ptr_node_t curr_node = m_this_node_map[depth_index][height_index + kernel_height/2][width_index + kernel_width/2];
+                curr_node->get_delta() = curr_node->get_op().derivative(curr_node->get_input()) * partial_E_y;
+            } // for width_index
+        } // for height_index
+    } // for_depth_index
+
+    m_prev_layer->backward_propagate();
+
+    for(int kernel_index = 0; kernel_index < kernel_size; ++ kernel_index)
+    {
+        tensor_t curr_kernel = m_kernel[kernel_index].details();
+        {
+            for(int kernel_x = 0; kernel_x < kernel_height; ++ kernel_x)
+            {
+                for(int kernel_y = 0; kernel_y < kernel_width; ++ kernel_y)
+                {
+                    double weight_change = 0;
+                    for(int depth_index = 0; depth_index < depth; ++ depth_index)
+                    {
+                        for(int height_index = 0; height_index < height; ++ height_index)
+                        {
+                            for(int width_index = 0; width_index < width; ++ width_index)
+                            {
+                                weight_change += m_next_node_map[depth_index + kernel_index * depth]
+                                        [height_index]
+                                        [width_index]->get_delta() *
+                                        m_this_node_map[depth_index]
+                                        [height_index + kernel_x]
+                                        [width_index + kernel_x]->get_activation();
+                            } // for width_index
+                        } // for height_index
+
+                    } // for depth_index
+                    //*curr_kernel[kernel_x][kernel_y] -= m_study_rate * weight_change;
+                } // for kernel_y
+            } // for kernel_x
+        } // for kernel_index
+    } // for kernel_index
+
+    }
+
 }
 
 conv_layer::conv_layer(shape2d_t window_size):
@@ -87,6 +234,26 @@ connecting_type conv_layer::get_connecting_type() const
 connecting_type &conv_layer::get_connecting_type()
 {
     return m_connecting_type;
+}
+
+vector<vector<vector<ptr_node_t> > > &conv_layer::get_this_node_map()
+{
+    return m_this_node_map;
+}
+
+vector<vector<vector<ptr_node_t> > > conv_layer::get_this_node_map() const
+{
+    return m_this_node_map;
+}
+
+vector<vector<vector<ptr_node_t> > > &conv_layer::get_next_node_map()
+{
+    return m_next_node_map;
+}
+
+vector<vector<vector<ptr_node_t> > > conv_layer::get_next_node_map() const
+{
+    return m_next_node_map;
 }
 
 #endif // CONV_LAYER_H_INCLUDED

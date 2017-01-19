@@ -43,12 +43,23 @@ pooling_layer::pooling_layer(shape2d_t n_window):
 
 void pooling_layer::backward_propagate()
 {
-    // nothing
-    throw call_error("call bp in polling layer", "polling_layer");
+    for(auto &curr_node : m_node)
+    {
+        curr_node->get_delta() = 0;
+    }
+
+    for(auto &curr_edge : m_edge)
+    {
+        curr_edge->get_prev_node()[0]->get_delta() =
+                curr_edge->get_next_node()->get_delta();
+    }
+
+    m_prev_layer->backward_propagate();
 }
 
 void pooling_layer::forward_propagate()
 {
+    m_edge.clear();
     vec_node_t &next_nodes = m_next_layer->get_nodes();
     if(get<0>(m_area) == 2)
     {
@@ -58,20 +69,32 @@ void pooling_layer::forward_propagate()
             {
                 for(int width_index = 0, width = get<2>(m_size); width_index < width/2; ++ width_index)
                 {
-                    next_nodes[depth_index * height * width / 4 + height_index * width / 2 + width_index]->activate(
-                            (*op)
-                            (
-                                vector<double>{
-                                m_node[depth_index * height * width +
-                                        (height_index * 2) * width + width_index * 2]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 2 + 1) * width + width_index * 2]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 2) * width + width_index * 2 + 1]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 2 + 1) * width + width_index * 2 + 1]->get_activation()
-                                }
-                            ));
+                    vec_node_t nodes_in_window;
+                    for(int window_x = 0; window_x < 2; ++ window_x)
+                    {
+                        for(int window_y = 0; window_y < 2; ++ window_y)
+                        {
+                            nodes_in_window.push_back(
+                                m_node[depth_index * height * width + (height_index * 2 + window_x) * width
+                                + width_index * 2 + window_y]
+                                );
+                        } // for window_y
+                    } // for window_x
+                    vector<double> activations;
+                    for(auto &c : nodes_in_window)
+                    {
+                        activations.push_back(c->get_activation());
+                    }
+                    int position;
+                    (*op)(activations, position);
+                    ptr_edge_t new_edge(new edge());
+                    new_edge->init({nodes_in_window[position]},
+                                   next_nodes[depth_index * height * width / 4 + height_index * width / 2 + width_index],
+                                   {ptr_double_t(new double(1))},
+                                   new_edge,
+                                   false
+                                  );
+                    m_edge.push_back(new_edge);
                 } // for width_index
             } // for height_index
         } // for depth_index
@@ -84,33 +107,38 @@ void pooling_layer::forward_propagate()
             {
                 for(int width_index = 0, width = get<2>(m_size); width_index < width/3; ++ width_index)
                 {
-                    next_nodes[depth_index * height * width / 9 + height_index * width / 3 + width_index]->activate(
-                            (*op)
-                            (
-                                vector<double> {
-                                m_node[depth_index * height * width +
-                                        (height_index * 3) * width + width_index * 3]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 1) * width + width_index * 3]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 2) * width + width_index * 3]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3) * width + width_index * 3 + 1]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 1) * width + width_index * 3 + 1]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 2) * width + width_index * 3 + 1]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3) * width + width_index * 3 + 2]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 1) * width + width_index * 3 + 2]->get_activation(),
-                                m_node[depth_index * height * width +
-                                        (height_index * 3 + 2) * width + width_index * 3 + 2]->get_activation()
-                                }
-                            ));
+                    vec_node_t nodes_in_window;
+                    for(int window_x = 0; window_x < 3; ++ window_x)
+                    {
+                        for(int window_y = 0; window_y < 3; ++ window_y)
+                        {
+                            nodes_in_window.push_back(
+                                m_node[depth_index * height * width + (height_index * 3 + window_x) * width
+                                + width_index * 3 + window_y]
+                                );
+                        } // for window_y
+                    } // for window_x
+                    vector<double> activations;
+                    for(auto &c : nodes_in_window)
+                    {
+                        activations.push_back(c->get_activation());
+                    }
+                    int position;
+                    (*op)(activations, position);
+                    ptr_edge_t new_edge(new edge());
+                    new_edge->init({nodes_in_window[position]},
+                                   next_nodes[depth_index * height * width / 9 + height_index * width / 3 + width_index],
+                                   {ptr_double_t(new double(1))},
+                                   new_edge,
+                                   false
+                                  );
                 } // for width_index
             } // for height_index
         } // for depth_index
+    }
+    for(auto &c : m_edge)
+    {
+        c->activate();
     }
     m_next_layer->forward_propagate();
 }

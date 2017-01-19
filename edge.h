@@ -14,7 +14,8 @@ public:
     void init(const vec_node_t &n_prev_nodes,
          ptr_node_t n_next_node,
          vec_double_t n_weights,
-         ptr_edge_t ptr_this
+         ptr_edge_t ptr_this,
+         bool add_info_to_node = true
          );
 
     void activate();
@@ -47,7 +48,8 @@ void edge::activate()
 void edge::init(const vec_node_t &n_prev_nodes,
            ptr_node_t n_next_node,
            vec_double_t n_weights,
-           ptr_edge_t ptr_this)
+           ptr_edge_t ptr_this,
+           bool add_info_to_node)
            {
                m_prev_nodes = n_prev_nodes;
                m_next_node = n_next_node;
@@ -57,12 +59,17 @@ void edge::init(const vec_node_t &n_prev_nodes,
                    throw edge_error("the weights size is not fit to nodes size!");
                }
 
-               for(auto &c : n_prev_nodes)
+               if(!add_info_to_node)
                {
-                   c->add_prev_edge(ptr_this);
+                   return;
                }
 
-               n_next_node->add_next_edge(ptr_this);
+               for(auto &c : n_prev_nodes)
+               {
+                   c->add_next_edge(ptr_this);
+               }
+
+               n_next_node->add_prev_edge(ptr_this);
            }
 
 
