@@ -1,7 +1,9 @@
+# define aliases
+
 #ifndef BASE_H_INCLUDED
 #define BASE_H_INCLUDED
 
-#include "util/dependence.h"
+#include "util/headers.h"
 
 #include "exception/layer_exception.h"
 #include "exception/math_exception.h"
