@@ -10,7 +10,8 @@ class edge
 public:
 
     edge() = default;
-
+    
+    // construct an edge, at the same time create a pointer to it
     void init(const vec_node_t &n_prev_nodes,
          ptr_node_t n_next_node,
          vec_double_t n_weights,
@@ -18,11 +19,15 @@ public:
          bool add_info_to_node = true
          );
 
+    // pass the signal from nodes on previous layer to a node on next layer
     void activate();
     
+    // get nodes the edge connects to on previous layer
     ptr_node_t get_next_node() const;
+    // get the node the edge connects to on next layer
     vec_node_t get_prev_node() const;    
 
+    // get the weight in the function of this edge
     vec_double_t &get_weights();
 
 private:
