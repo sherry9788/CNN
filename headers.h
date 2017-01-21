@@ -1,5 +1,7 @@
-#ifndef DEPENDENCE_H_INCLUDE
-#define DEPENDENCE_H_INCLUDE
+#ifndef HEADERS_H_INCLUDE
+#define HEADERS_H_INCLUDE
+
+# Include all the header files I will used in this project
 
 #include <iostream>
 #include <fstream>
