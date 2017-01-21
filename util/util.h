@@ -71,6 +71,7 @@ void debug(T x)
         << std::endl;
 }
 
+# will be used in convolutional layers
 enum class connecting_type
 {
     one_by_one,
