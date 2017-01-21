@@ -9,8 +9,10 @@ public:
     friend void save_to_file(void *, void *, string);
     friend void load_from_file(void **, void **, string);
 
+    // will be defined by derived classes
     virtual void forward_propagate();
     virtual void backward_propagate();
+    // count the number of nodes
     int get_node_size() const;
 
     layer() = delete;
@@ -26,6 +28,7 @@ public:
     shape3d_t &get_size();
     shape3d_t get_size() const;
 
+    // linearly align all nodes
     void resize_window();
 
     layer *m_next_layer = nullptr;
