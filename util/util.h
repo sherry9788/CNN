@@ -1,4 +1,4 @@
-# define aliases
+// define aliases
 
 #ifndef BASE_H_INCLUDED
 #define BASE_H_INCLUDED
@@ -71,7 +71,7 @@ void debug(T x)
         << std::endl;
 }
 
-# will be used in convolutional layers
+// will be used in convolutional layers
 enum class connecting_type
 {
     one_by_one,
