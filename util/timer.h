@@ -1,4 +1,4 @@
-# Keep time of trianing process
+// Keep time of trianing process
 
 #ifndef TIMER
 #define TIMER
